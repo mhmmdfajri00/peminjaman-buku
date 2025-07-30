@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Perpustakaan SMAN 21 GOWA</title>
+    <link rel="stylesheet" href="#styles">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📚 Sistem Perpustakaan SMAN 21 GOWA</h1>
+            <p>Pencatatan Peminjam Buku</p>
+        </header>
+
+        <div class="class-selector">
+            <label for="classSelect">Pilih Kelas:</label>
+            <select id="classSelect">
+                <option value="">-- Pilih Kelas --</option>
+                <option value="X-1">X-A</option>
+                <option value="X-1">X-B</option>
+                <option value="X-1">X-C</option>
+                <option value="X-1">X-D</option>
+                <option value="X-2">X-E</option>
+                <option value="X-3">X-F</option>
+                <option value="XI-1">XI IPA 1</option>
+                <option value="XI-2">XI IPA 1</option>
+                <option value="XI-3">XI IPA 1</option>
+                <option value="XI-4">XI IPA 1</option>
+                <option value="XI-5">XI IPA 1</option>
+                <option value="XI-6">XI IPA 1</option>
+                <option value="XII-MIPA-1">XII IPA 1</option>
+                <option value="XII-MIPA-2">XII IPA 1</option>
+                <option value="XII-MIPA-3">XII IPA 2</option>
+                <option value="XII-IPS-1">XII IPS 1</option>
+                <option value="XII-IPS-1">XII IPS 2</option>
+                <option value="XII-IPS-2">XII IPS 3</option>
+            </select>
+        </div>
+
+        <div class="form-section">
+            <h2>📝 Form Peminjaman Buku</h2>
+            <form id="borrowForm">
+                <div class="form-group">
+                    <label for="studentName">Nama Siswa:</label>
+                    <input type="text" id="studentName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="studentId">NIS:</label>
+                    <input type="text" id="studentId" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookTitle">Judul Buku:</label>
+                    <input type="text" id="bookTitle" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookCode">Kode Buku:</label>
+                    <input type="text" id="bookCode" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="borrowDate">Tanggal Pinjam:</label>
+                    <input type="date" id="borrowDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="returnDate">Tanggal Kembali:</label>
+                    <input type="date" id="returnDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Catatan:</label>
+                    <textarea id="notes" rows="3"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">📝 Simpan Data</button>
+                <button type="button" id="clearForm" class="btn btn-secondary">🗑️ Bersihkan Form</button>
+            </form>
+        </div>
+
+        <div class="actions-section">
+            <h2>⚙️ Kelola Data</h2>
+            <div class="action-buttons">
+                <button id="exportExcel" class="btn btn-success">📊 Export ke Excel</button>
+                <button id="importBtn" class="btn btn-info">📥 Import dari Excel</button>
+                <input type="file" id="importFile" accept=".xlsx,.xls" style="display: none;">
+                <button id="clearData" class="btn btn-danger">🗑️ Hapus Semua Data</button>
+            </div>
+        </div>
+
+        <div class="data-section">
+            <h2>📋 Data Peminjaman</h2>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Cari berdasarkan nama, NIS, atau judul buku...">
+            </div>
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Siswa</th>
+                            <th>NIS</th>
+                            <th>Judul Buku</th>
+                            <th>Kode Buku</th>
+                            <th>Tanggal Pinjam</th>
+                            <th>Tanggal Kembali</th>
+                            <th>Status</th>
+                            <th>Catatan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <tr>
+                            <td colspan="10" class="no-data">Pilih kelas terlebih dahulu untuk melihat data</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal Edit -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>✏️ Edit Data Peminjaman</h2>
+                <form id="editForm">
+                    <input type="hidden" id="editIndex">
+                    <div class="form-group">
+                        <label for="editStudentName">Nama Siswa:</label>
+                        <input type="text" id="editStudentName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentId">NIS:</label>
+                        <input type="text" id="editStudentId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBookTitle">Judul Buku:</label>
+                        <input type="text" id="editBookTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBookCode">Kode Buku:</label>
+                        <input type="text" id="editBookCode" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBorrowDate">Tanggal Pinjam:</label>
+                        <input type="date" id="editBorrowDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editReturnDate">Tanggal Kembali:</label>
+                        <input type="date" id="editReturnDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editNotes">Catatan:</label>
+                        <textarea id="editNotes" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">💾 Update Data</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">❌ Batal</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style id="styles">
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .class-selector {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .class-selector label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .class-selector select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+
+        .form-section, .actions-section, .data-section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-section h2, .actions-section h2, .data-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .status-returned {
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-borrowed {
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-overdue {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .form-section, .actions-section, .data-section {
+                padding: 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+
+    <script>
+        class LibrarySystem {
+            constructor() {
+                this.currentClass = '';
+                this.data = {};
+                this.init();
+            }
+
+            init() {
+                this.loadData();
+                this.bindEvents();
+                this.setDefaultDate();
+            }
+
+            bindEvents() {
+                document.getElementById('classSelect').addEventListener('change', (e) => {
+                    this.currentClass = e.target.value;
+                    this.displayData();
+                    this.toggleFormVisibility();
+                });
+
+                document.getElementById('borrowForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addRecord();
+                });
+
+                document.getElementById('clearForm').addEventListener('click', () => {
+                    this.clearForm();
+                });
+
+                document.getElementById('exportExcel').addEventListener('click', () => {
+                    this.exportToExcel();
+                });
+
+                document.getElementById('importBtn').addEventListener('click', () => {
+                    document.getElementById('importFile').click();
+                });
+
+                document.getElementById('importFile').addEventListener('change', (e) => {
+                    this.importFromExcel(e.target.files[0]);
+                });
+
+                document.getElementById('clearData').addEventListener('click', () => {
+                    this.clearAllData();
+                });
+
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.searchData(e.target.value);
+                });
+
+                document.getElementById('editForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.updateRecord();
+                });
+
+                document.querySelector('.close').addEventListener('click', () => {
+                    this.closeEditModal();
+                });
+            }
+
+            setDefaultDate() {
+                const today = new Date().toISOString().split('T')[0];
+                const returnDate = new Date();
+                returnDate.setDate(returnDate.getDate() + 7);
+                const returnDateStr = returnDate.toISOString().split('T')[0];
+
+                document.getElementById('borrowDate').value = today;
+                document.getElementById('returnDate').value = returnDateStr;
+            }
+
+            toggleFormVisibility() {
+                const formSection = document.querySelector('.form-section');
+                const actionsSection = document.querySelector('.actions-section');
+                
+                if (this.currentClass) {
+                    formSection.style.display = 'block';
+                    actionsSection.style.display = 'block';
+                } else {
+                    formSection.style.display = 'none';
+                    actionsSection.style.display = 'none';
+                }
+            }
+
+            addRecord() {
+                if (!this.currentClass) {
+                    alert('⚠️ Pilih kelas terlebih dahulu!');
+                    return;
+                }
+
+                const record = {
+                    studentName: document.getElementById('studentName').value,
+                    studentId: document.getElementById('studentId').value,
+                    bookTitle: document.getElementById('bookTitle').value,
+                    bookCode: document.getElementById('bookCode').value,
+                    borrowDate: document.getElementById('borrowDate').value,
+                    returnDate: document.getElementById('returnDate').value,
+                    notes: document.getElementById('notes').value,
+                    timestamp: new Date().toISOString()
+                };
+
+                if (!this.data[this.currentClass]) {
+                    this.data[this.currentClass] = [];
+                }
+
+                this.data[this.currentClass].push(record);
+                this.saveData();
+                this.displayData();
+                this.clearForm();
+                
+                alert('✅ Data berhasil disimpan!');
+            }
+
+            clearForm() {
+                document.getElementById('borrowForm').reset();
+                this.setDefaultDate();
+            }
+
+            displayData() {
+                const tbody = document.getElementById('dataTableBody');
+                
+                if (!this.currentClass) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="no-data">Pilih kelas terlebih dahulu untuk melihat data</td></tr>';
+                    return;
+                }
+
+                const classData = this.data[this.currentClass] || [];
+                
+                if (classData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="no-data">Belum ada data peminjaman untuk kelas ini</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = classData.map((record, index) => {
+                    const status = this.getStatus(record.returnDate);
+                    return `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${record.studentName}</td>
+                            <td>${record.studentId}</td>
+                            <td>${record.bookTitle}</td>
+                            <td>${record.bookCode}</td>
+                            <td>${this.formatDate(record.borrowDate)}</td>
+                            <td>${this.formatDate(record.returnDate)}</td>
+                            <td><span class="status-${status.class}">${status.text}</span></td>
+                            <td>${record.notes || '-'}</td>
+                            <td>
+                                <button class="btn btn-warning" onclick="librarySystem.editRecord(${index})" title="Edit">✏️</button>
+                                <button class="btn btn-danger" onclick="librarySystem.deleteRecord(${index})" title="Hapus">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            getStatus(returnDate) {
+                const today = new Date();
+                const returnDateTime = new Date(returnDate);
+                
+                if (returnDateTime < today) {
+                    return { class: 'overdue', text: 'Terlambat' };
+                } else if (returnDateTime.toDateString() === today.toDateString()) {
+                    return { class: 'borrowed', text: 'Jatuh Tempo' };
+                } else {
+                    return { class: 'borrowed', text: 'Dipinjam' };
+                }
+            }
+
+            formatDate(dateStr) {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('id-ID');
+            }
+
+            editRecord(index) {
+                const record = this.data[this.currentClass][index];
+                
+                document.getElementById('editIndex').value = index;
+                document.getElementById('editStudentName').value = record.studentName;
+                document.getElementById('editStudentId').value = record.studentId;
+                document.getElementById('editBookTitle').value = record.bookTitle;
+                document.getElementById('editBookCode').value = record.bookCode;
+                document.getElementById('editBorrowDate').value = record.borrowDate;
+                document.getElementById('editReturnDate').value = record.returnDate;
+                document.getElementById('editNotes').value = record.notes || '';
+                
+                document.getElementById('editModal').style.display = 'block';
+            }
+
+            updateRecord() {
+                const index = parseInt(document.getElementById('editIndex').value);
+                
+                this.data[this.currentClass][index] = {
+                    ...this.data[this.currentClass][index],
+                    studentName: document.getElementById('editStudentName').value,
+                    studentId: document.getElementById('editStudentId').value,
+                    bookTitle: document.getElementById('editBookTitle').value,
+                    bookCode: document.getElementById('editBookCode').value,
+                    borrowDate: document.getElementById('editBorrowDate').value,
+                    returnDate: document.getElementById('editReturnDate').value,
+                    notes: document.getElementById('editNotes').value
+                };
+
+                this.saveData();
+                this.displayData();
+                this.closeEditModal();
+                
+                alert('✅ Data berhasil diupdate!');
+            }
+
+            closeEditModal() {
+                document.getElementById('editModal').style.display = 'none';
+            }
+
+            deleteRecord(index) {
+                if (confirm('🗑️ Apakah Anda yakin ingin menghapus data ini?')) {
+                    this.data[this.currentClass].splice(index, 1);
+                    this.saveData();
+                    this.displayData();
+                    alert('✅ Data berhasil dihapus!');
+                }
+            }
+
+            searchData(query) {
+                const rows = document.querySelectorAll('#dataTableBody tr');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(query.toLowerCase())) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            exportToExcel() {
+                if (!this.currentClass) {
+                    alert('⚠️ Pilih kelas terlebih dahulu!');
+                    return;
+                }
+
+                const classData = this.data[this.currentClass] || [];
+                
+                if (classData.length === 0) {
+                    alert('⚠️ Tidak ada data untuk diekspor!');
+                    return;
+                }
+
+                const exportData = classData.map((record, index) => ({
+                    'No': index + 1,
+                    'Nama Siswa': record.studentName,
+                    'NIS': record.studentId,
+                    'Judul Buku': record.bookTitle,
+                    'Kode Buku': record.bookCode,
+                    'Tanggal Pinjam': record.borrowDate,
+                    'Tanggal Kembali': record.returnDate,
+                    'Catatan': record.notes || '-'
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, this.currentClass);
+                
+                XLSX.writeFile(wb, `Perpustakaan_SMAN21_GOWA_${this.currentClass}_${new Date().toISOString().split('T')[0]}.xlsx`);
+                
+                alert('📊 Data berhasil diekspor ke Excel!');
+            }
+
+            importFromExcel(file) {
+                if (!file) return;
+                
+                if (!this.currentClass) {
+                    alert('⚠️ Pilih kelas terlebih dahulu!');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                        const importedData = jsonData.map(row => ({
+                            studentName: row['Nama Siswa'] || '',
+                            studentId: row['NIS'] || '',
+                            bookTitle: row['Judul Buku'] || '',
+                            bookCode: row['Kode Buku'] || '',
+                            borrowDate: this.excelDateToJS(row['Tanggal Pinjam']),
+                            returnDate: this.excelDateToJS(row['Tanggal Kembali']),
+                            notes: row['Catatan'] || '',
+                            timestamp: new Date().toISOString()
+                        }));
+
+                        if (confirm(`📥 Import ${importedData.length} data ke kelas ${this.currentClass}?`)) {
+                            if (!this.data[this.currentClass]) {
+                                this.data[this.currentClass] = [];
+                            }
+                            this.data[this.currentClass] = [...this.data[this.currentClass], ...importedData];
+                            this.saveData();
+                            this.displayData();
+                            alert('✅ Data berhasil diimpor!');
+                        }
+                    } catch (error) {
+                        alert('❌ Error membaca file Excel: ' + error.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            excelDateToJS(excelDate) {
+                if (typeof excelDate === 'number') {
+                    const date = new Date((excelDate - 25569) * 86400 * 1000);
+                    return date.toISOString().split('T')[0];
+                }
+                return excelDate || '';
+            }
+
+            clearAllData() {
+                if (!this.currentClass) {
+                    alert('⚠️ Pilih kelas terlebih dahulu!');
+                    return;
+                }
+
+                if (confirm(`🗑️ Apakah Anda yakin ingin menghapus SEMUA data kelas ${this.currentClass}?`)) {
+                    this.data[this.currentClass] = [];
+                    this.saveData();
+                    this.displayData();
+                    alert('✅ Semua data berhasil dihapus!');
+                }
+            }
+
+            saveData() {
+                // Menggunakan variabel JavaScript untuk menyimpan data
+                // Karena tidak bisa menggunakan localStorage di artifact
+                console.log('Data disimpan:', this.data);
+            }
+
+            loadData() {
+                // Data akan hilang setelah refresh karena keterbatasan artifact
+                // Dalam implementasi nyata, gunakan localStorage atau database
+                this.data = {};
+            }
+        }
+
+        // Inisialisasi sistem
+        const librarySystem = new LibrarySystem();
+
+        // Event listener untuk modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
